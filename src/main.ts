@@ -48,17 +48,27 @@ function addLines(grid: Grid) {
   const numberOfVertLines = 5;
   const numberOfHoriLines = 5;
 
+  const vertLines: number[] = [];
+  const horiLines: number[] = [];
+
   for (let i = 0; i < numberOfVertLines; i++) {
-    const startingPoint = Math.floor(Math.random() * grid.width);
+    const startingPoint = Math.round(Math.random() * grid.width);
     console.log(startingPoint);
+    vertLines.push(startingPoint);
     addVertLine(grid, startingPoint, "black");
   }
 
   for (let i = 0; i < numberOfHoriLines; i++) {
-    const startingPoint = Math.floor(Math.random() * grid.width);
+    const startingPoint = Math.round(Math.random() * grid.width);
     console.log(startingPoint);
+    horiLines.push(startingPoint);
     addHoriLine(grid, startingPoint, "black");
   }
+
+  return {
+    vertLines,
+    horiLines,
+  };
 }
 
 function addVertLine(grid: Grid, x: number, value: string) {
@@ -83,5 +93,45 @@ function renderGrid(grid: Grid, ctx: CanvasRenderingContext2D) {
   }
 }
 
-addLines(grid);
+function removeSegment(
+  grid: Grid,
+  startingPoint: number,
+  direction: "vertical" | "horizontal"
+) {
+  const intersections: Array<{ x: number; y: number }> = [];
+
+  intersections.push({ x: startingPoint, y: 0 });
+
+  for (let i = 0; i < grid.height; i++) {
+    const upOne = grid.get(startingPoint, i - 1);
+    const downOne = grid.get(startingPoint, i + 1);
+    const leftOne = grid.get(startingPoint - 1, i);
+    const rightOne = grid.get(startingPoint + 1, i);
+
+    const allAreLines = [upOne, downOne, leftOne, rightOne].every(
+      point => point === "black"
+    );
+    if (allAreLines) {
+      intersections.push({ x: startingPoint, y: i });
+    }
+  }
+
+  intersections.push({ x: startingPoint, y: grid.height });
+
+  const pointA = Math.floor(Math.random() * (intersections.length - 2));
+  const pointB = pointA + 1;
+
+  for (let i = intersections[pointA].y + 1; i < intersections[pointB].y; i++) {
+    grid.set(startingPoint, i, "white");
+  }
+
+  console.log(intersections);
+}
+
+const { vertLines } = addLines(grid);
+
+for (const startingPoint of vertLines) {
+  removeSegment(grid, startingPoint, "vertical");
+}
+
 renderGrid(grid, ctx);
